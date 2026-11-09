@@ -154,17 +154,10 @@ $("searchEngine").value=searchEngines[savedEngine]?savedEngine:"google";
 $("searchEngine").addEventListener("change",()=>{
  localStorage.setItem("startpage-search-engine",$("searchEngine").value);
 });
-// Browser detection is best-effort. Some privacy-focused browsers identify
-// themselves as Chromium/Chrome, so exact detection is not always possible.
+// Detect browsers using their identifying user-agent markers first.
+// Brave's special API is checked only as a fallback for Chromium browsers.
 async function getBrowserLabel(){
  const ua=navigator.userAgent||"";
-
- // Brave exposes a dedicated detection API in supported versions.
- try{
-  if(navigator.brave && typeof navigator.brave.isBrave==="function"){
-   if(await navigator.brave.isBrave()) return "Brave";
-  }
- }catch(_){}
 
  if(/SamsungBrowser/i.test(ua)) return "Samsung Internet";
  if(/EdgA?\/|EdgiOS\//i.test(ua)) return "Edge";
@@ -174,7 +167,15 @@ async function getBrowserLabel(){
  if(/DuckDuckGo/i.test(ua)) return "DuckDuckGo";
  if(/Firefox\/|FxiOS\//i.test(ua)) return "Firefox";
  if(/CriOS\//i.test(ua)) return "Chrome iOS";
- if(/Chrome\//i.test(ua)) return "Chrome";
+ if(/Chrome\//i.test(ua)){
+  try{
+   if(navigator.brave && typeof navigator.brave.isBrave==="function"){
+    const braveResult=await navigator.brave.isBrave();
+    if(braveResult===true) return "Brave";
+   }
+  }catch(_){}
+  return "Chrome";
+ }
  if(/Safari\//i.test(ua)) return "Safari";
  return "Unknown";
 }

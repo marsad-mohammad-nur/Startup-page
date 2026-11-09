@@ -154,13 +154,39 @@ $("searchEngine").value=searchEngines[savedEngine]?savedEngine:"google";
 $("searchEngine").addEventListener("change",()=>{
  localStorage.setItem("startpage-search-engine",$("searchEngine").value);
 });
-$("searchForm").addEventListener("submit",e=>{
+// Best-effort browser label; this is informational and may not always be accurate.
+function getBrowserLabel(){
+ const ua=navigator.userAgent||"";
+ if(/Edg\//i.test(ua)) return "Edge";
+ if(/SamsungBrowser/i.test(ua)) return "Samsung Internet";
+ if(/OPR\//i.test(ua)) return "Opera";
+ if(/Firefox\//i.test(ua)) return "Firefox";
+ if(/CriOS\//i.test(ua)) return "Chrome iOS";
+ if(/Chrome\//i.test(ua)) return "Chrome";
+ if(/Safari\//i.test(ua)) return "Safari";
+ return "Unknown";
+}
+
+const HISTORY_API_URL="https://search-history-api.vercel.app/api/search";
+
+$("searchForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const q=$("query").value.trim();
- if(q){
-  const engine=$("searchEngine").value;
-  location.href=searchEngines[engine]+encodeURIComponent(q);
+ if(!q)return;
+
+ const engine=$("searchEngine").value;
+ // Save only searches submitted through this homepage's search form.
+ // If history saving fails, still send the user to the selected search engine.
+ try{
+  await fetch(HISTORY_API_URL,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({query:q,browser:getBrowserLabel()})
+  });
+ }catch(err){
+  console.warn("Could not save search history:",err);
  }
+ location.href=searchEngines[engine]+encodeURIComponent(q);
 });
 render();
 </script>

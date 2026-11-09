@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070b09">
+<title>My Startpage</title>
+<style>
+:root{--bg:#070b09;--panel:#0d1511;--panel2:#111d16;--green:#39ff88;--muted:#8aa596;--line:#1c3929;--white:#eafff1}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -15%,#123522 0%,transparent 48%),var(--bg);color:var(--white);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:26px 17px 40px}
+main{width:min(100%,620px);margin:0 auto}
+.topline{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green);margin-right:8px}
+.brand{text-align:center;margin:62px 0 26px}
+.brand small{color:var(--green);letter-spacing:4px;font-size:11px}
+.clock{font-size:clamp(54px,15vw,82px);font-weight:300;letter-spacing:-4px;line-height:1.15;text-shadow:0 0 24px #39ff8830;font-variant-numeric:tabular-nums}
+.date{color:var(--muted);font-size:14px;margin-top:8px}
+.search{display:flex;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:7px;box-shadow:0 8px 30px #0005}
+.search input{min-width:0;flex:1;background:transparent;border:0;outline:0;color:var(--white);font-size:15px;padding:10px}
+.search input::placeholder{color:#71877a}
+.search button,.add,.save{border:0;border-radius:10px;background:var(--green);color:#06130b;font-weight:700;padding:0 17px;cursor:pointer}
+.sectionhead{display:flex;align-items:center;justify-content:space-between;margin:36px 0 14px}
+h2{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0}
+.add{padding:9px 13px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.site{position:relative;min-height:92px;background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:15px 9px 12px;text-align:center;text-decoration:none;color:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;overflow:hidden}
+.site:active{transform:scale(.98)}
+.favicon{width:27px;height:27px;border-radius:8px;background:#183a27;display:grid;place-items:center;color:var(--green);font-weight:700;font-size:13px}
+.site span:last-child{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actions{position:absolute;top:5px;right:5px;display:flex;gap:3px;opacity:0}
+.site:hover .actions,.site:focus-within .actions{opacity:1}
+.actions button{background:#1a2b20;color:var(--muted);border:0;border-radius:5px;font-size:11px;padding:3px 5px}
+.empty{grid-column:1/-1;border:1px dashed var(--line);border-radius:14px;padding:25px 12px;text-align:center;color:var(--muted);font-size:13px}
+footer{text-align:center;color:#587062;font-size:11px;margin-top:42px;letter-spacing:1px}
+dialog{width:min( calc(100% - 30px),400px);border:1px solid var(--line);border-radius:18px;background:#0d1511;color:var(--white);padding:22px;box-shadow:0 20px 80px #000b}
+dialog::backdrop{background:#000b;backdrop-filter:blur(4px)}
+dialog h3{margin:0 0 17px;color:var(--green);font-size:16px}
+label{display:block;color:var(--muted);font-size:12px;margin:13px 0 6px}
+dialog input{width:100%;background:#07100b;border:1px solid var(--line);border-radius:9px;padding:12px;color:var(--white);outline:none}
+dialog input:focus{border-color:var(--green)}
+.modalbuttons{display:flex;gap:9px;margin-top:20px}
+.modalbuttons button{flex:1;padding:11px;border-radius:9px;border:1px solid var(--line);background:#142219;color:var(--white)}
+.modalbuttons .save{background:var(--green);color:#06130b;border:0}
+@media(min-width:520px){body{padding-top:34px}.brand{margin-top:78px}.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<main>
+  <div class="topline"><span><i class="dot"></i> SYSTEM ONLINE</span><span>PERSONAL STARTPAGE</span></div>
+  <section class="brand">
+    <small>WELCOME BACK</small>
+    <div class="clock" id="clock">00:00:00</div>
+    <div class="date" id="date">লোড হচ্ছে...</div>
+  </section>
+  <form class="search" id="searchForm">
+    <input id="query" type="search" placeholder="Search the web..." autocomplete="off" aria-label="Search the web">
+    <button type="submit">SEARCH</button>
+  </form>
+  <section>
+    <div class="sectionhead"><h2>My shortcuts</h2><button class="add" id="addBtn">＋ Add site</button></div>
+    <div class="grid" id="sites"></div>
+  </section>
+  <footer>BUILT FOR YOUR SPACE · STAY CURIOUS</footer>
+</main>
+
+<dialog id="siteDialog">
+  <form id="siteForm">
+    <h3 id="dialogTitle">ADD SHORTCUT</h3>
+    <label for="siteName">Website name</label>
+    <input id="siteName" maxlength="32" placeholder="e.g. YouTube" required>
+    <label for="siteUrl">Website URL</label>
+    <input id="siteUrl" type="text" inputmode="url" placeholder="https://example.com" required>
+    <div class="modalbuttons">
+      <button type="button" id="cancelBtn">Cancel</button>
+      <button class="save" type="submit">Save shortcut</button>
+    </div>
+  </form>
+</dialog>
+<script>
+const $=id=>document.getElementById(id);
+const defaultSites=[
+ {name:"Google",url:"https://www.google.com"},
+ {name:"YouTube",url:"https://www.youtube.com"},
+ {name:"GitHub",url:"https://github.com"}
+];
+let sites=JSON.parse(localStorage.getItem("startpage-sites")||"null")||defaultSites;
+let editingIndex=-1;
+function tick(){
+ const now=new Date();
+ $("clock").textContent=now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true});
+ $("date").textContent=now.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+}
+tick();setInterval(tick,1000);
+function persist(){localStorage.setItem("startpage-sites",JSON.stringify(sites));render();}
+function safeUrl(raw){
+ let value=raw.trim();
+ if(!/^https?:\/\//i.test(value)) value="https://"+value;
+ const parsed=new URL(value);
+ if(!["http:","https:"].includes(parsed.protocol)) throw new Error("Invalid URL");
+ return parsed.href;
+}
+function render(){
+ const root=$("sites");root.innerHTML="";
+ if(!sites.length){root.innerHTML='<div class="empty">No shortcuts yet. Tap “Add site” to save your first website.</div>';return;}
+ sites.forEach((site,index)=>{
+  const a=document.createElement("a");a.className="site";a.href=site.url;
+  const icon=document.createElement("span");icon.className="favicon";icon.textContent=(site.name||"?").trim().charAt(0).toUpperCase();
+  const name=document.createElement("span");name.textContent=site.name;
+  const actions=document.createElement("span");actions.className="actions";
+  const edit=document.createElement("button");edit.type="button";edit.textContent="Edit";edit.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openDialog(index);});
+  const del=document.createElement("button");del.type="button";del.textContent="×";del.setAttribute("aria-label","Delete "+site.name);del.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();if(confirm("Delete "+site.name+"?")){sites.splice(index,1);persist();}});
+  actions.append(edit,del);a.append(icon,name,actions);root.append(a);
+ });
+}
+function openDialog(index=-1){
+ editingIndex=index;$("dialogTitle").textContent=index<0?"ADD SHORTCUT":"EDIT SHORTCUT";
+ $("siteName").value=index<0?"":sites[index].name;$("siteUrl").value=index<0?"":sites[index].url;
+ $("siteDialog").showModal();$("siteName").focus();
+}
+$("addBtn").addEventListener("click",()=>openDialog());
+$("cancelBtn").addEventListener("click",()=>$("siteDialog").close());
+$("siteForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ try{
+  const item={name:$("siteName").value.trim(),url:safeUrl($("siteUrl").value)};
+  if(!item.name)throw new Error("Enter a website name");
+  if(editingIndex<0)sites.push(item);else sites[editingIndex]=item;
+  persist();$("siteDialog").close();
+ }catch(err){alert(err.message==="Invalid URL"?"Please enter a valid website URL.":err.message);}
+});
+$("searchForm").addEventListener("submit",e=>{
+ e.preventDefault();const q=$("query").value.trim();if(q)location.href="https://www.google.com/search?q="+encodeURIComponent(q);
+});
+render();
+</script>
+</body>
+</html>

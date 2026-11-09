@@ -16,6 +16,9 @@ main{width:min(100%,620px);margin:0 auto}
 .brand small{color:var(--green);letter-spacing:4px;font-size:11px}
 .clock{font-size:clamp(54px,15vw,82px);font-weight:300;letter-spacing:-4px;line-height:1.15;text-shadow:0 0 24px #39ff8830;font-variant-numeric:tabular-nums}
 .date{color:var(--muted);font-size:14px;margin-top:8px}
+.search-tools{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin:0 2px 8px}
+.engine-label{color:var(--muted);font-size:10px;letter-spacing:1.5px}
+.search-tools select{background:var(--panel);border:1px solid var(--line);border-radius:9px;color:var(--green);padding:7px 10px;font-size:12px;outline:none}
 .search{display:flex;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:7px;box-shadow:0 8px 30px #0005}
 .search input{min-width:0;flex:1;background:transparent;border:0;outline:0;color:var(--white);font-size:15px;padding:10px}
 .search input::placeholder{color:#71877a}
@@ -53,6 +56,16 @@ dialog input:focus{border-color:var(--green)}
     <div class="clock" id="clock">00:00:00</div>
     <div class="date" id="date">লোড হচ্ছে...</div>
   </section>
+  <div class="search-tools">
+    <label class="engine-label" for="searchEngine">SEARCH ENGINE</label>
+    <select id="searchEngine" aria-label="Choose search engine">
+      <option value="google">Google</option>
+      <option value="bing">Bing</option>
+      <option value="duckduckgo">DuckDuckGo</option>
+      <option value="brave">Brave Search</option>
+      <option value="yahoo">Yahoo</option>
+    </select>
+  </div>
   <form class="search" id="searchForm">
     <input id="query" type="search" placeholder="Search the web..." autocomplete="off" aria-label="Search the web">
     <button type="submit">SEARCH</button>
@@ -129,8 +142,25 @@ $("siteForm").addEventListener("submit",e=>{
   persist();$("siteDialog").close();
  }catch(err){alert(err.message==="Invalid URL"?"Please enter a valid website URL.":err.message);}
 });
+const searchEngines={
+ google:"https://www.google.com/search?q=",
+ bing:"https://www.bing.com/search?q=",
+ duckduckgo:"https://duckduckgo.com/?q=",
+ brave:"https://search.brave.com/search?q=",
+ yahoo:"https://search.yahoo.com/search?p="
+};
+const savedEngine=localStorage.getItem("startpage-search-engine")||"google";
+$("searchEngine").value=searchEngines[savedEngine]?savedEngine:"google";
+$("searchEngine").addEventListener("change",()=>{
+ localStorage.setItem("startpage-search-engine",$("searchEngine").value);
+});
 $("searchForm").addEventListener("submit",e=>{
- e.preventDefault();const q=$("query").value.trim();if(q)location.href="https://www.google.com/search?q="+encodeURIComponent(q);
+ e.preventDefault();
+ const q=$("query").value.trim();
+ if(q){
+  const engine=$("searchEngine").value;
+  location.href=searchEngines[engine]+encodeURIComponent(q);
+ }
 });
 render();
 </script>

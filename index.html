@@ -154,13 +154,25 @@ $("searchEngine").value=searchEngines[savedEngine]?savedEngine:"google";
 $("searchEngine").addEventListener("change",()=>{
  localStorage.setItem("startpage-search-engine",$("searchEngine").value);
 });
-// Best-effort browser label; this is informational and may not always be accurate.
-function getBrowserLabel(){
+// Browser detection is best-effort. Some privacy-focused browsers identify
+// themselves as Chromium/Chrome, so exact detection is not always possible.
+async function getBrowserLabel(){
  const ua=navigator.userAgent||"";
- if(/Edg\//i.test(ua)) return "Edge";
+
+ // Brave exposes a dedicated detection API in supported versions.
+ try{
+  if(navigator.brave && typeof navigator.brave.isBrave==="function"){
+   if(await navigator.brave.isBrave()) return "Brave";
+  }
+ }catch(_){}
+
  if(/SamsungBrowser/i.test(ua)) return "Samsung Internet";
- if(/OPR\//i.test(ua)) return "Opera";
- if(/Firefox\//i.test(ua)) return "Firefox";
+ if(/EdgA?\/|EdgiOS\//i.test(ua)) return "Edge";
+ if(/OPR\/|Opera/i.test(ua)) return "Opera";
+ if(/YaBrowser/i.test(ua)) return "Yandex Browser";
+ if(/Vivaldi/i.test(ua)) return "Vivaldi";
+ if(/DuckDuckGo/i.test(ua)) return "DuckDuckGo";
+ if(/Firefox\/|FxiOS\//i.test(ua)) return "Firefox";
  if(/CriOS\//i.test(ua)) return "Chrome iOS";
  if(/Chrome\//i.test(ua)) return "Chrome";
  if(/Safari\//i.test(ua)) return "Safari";
@@ -181,7 +193,7 @@ $("searchForm").addEventListener("submit",async e=>{
   await fetch(HISTORY_API_URL,{
    method:"POST",
    headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({query:q,browser:getBrowserLabel()})
+   body:JSON.stringify({query:q,browser:await getBrowserLabel()})
   });
  }catch(err){
   console.warn("Could not save search history:",err);

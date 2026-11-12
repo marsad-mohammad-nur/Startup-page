@@ -182,25 +182,76 @@ async function getBrowserLabel(){
 
 const HISTORY_API_URL="https://search-history-api.vercel.app/api/search";
 
-$("searchForm").addEventListener("submit",async e=>{
- e.preventDefault();
- const q=$("query").value.trim();
- if(!q)return;
+// Human-readable labels are stored separately from the browser name.
+const engineNames = {
+  google: "Google",
+  bing: "Bing",
+  duckduckgo: "DuckDuckGo",
+  brave: "Brave Search",
+  yahoo: "Yahoo"
+};
 
- const engine=$("searchEngine").value;
- // Save only searches submitted through this homepage's search form.
- // If history saving fails, still send the user to the selected search engine.
- try{
-  await fetch(HISTORY_API_URL,{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({query:q,browser:await getBrowserLabel()})
-  });
- }catch(err){
-  console.warn("Could not save search history:",err);
- }
- location.href=searchEngines[engine]+encodeURIComponent(q);
+const androidSearchApps = {
+  google: "com.google.android.googlequicksearchbox",
+  bing: "com.microsoft.bing",
+  duckduckgo: "com.duckduckgo.mobile.android",
+  yahoo: "com.yahoo.mobile.client.android.search"
+};
+
+function openSearch(engine, query) {
+  const encodedQuery = encodeURIComponent(query);
+  const webUrl = searchEngines[engine] + encodedQuery;
+
+  if (!/Android/i.test(navigator.userAgent) || !androidSearchApps[engine]) {
+    location.href = webUrl;
+    return;
+  }
+
+  const packageName = androidSearchApps[engine];
+  const intentUrl =
+    `intent://${webUrl.replace(/^https?:\/\//i, "")}` +
+    `#Intent;scheme=https;package=${packageName};` +
+    `S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
+
+  location.href = intentUrl;
+}
+
+// Detect browser ahead of submission to preserve Android's user-initiated app launch.
+let detectedBrowserLabel = "Unknown";
+getBrowserLabel()
+  .then(label => { detectedBrowserLabel = label; })
+  .catch(() => { detectedBrowserLabel = "Unknown"; });
+
+$("searchForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const q = $("query").value.trim();
+  if (!q) return;
+
+  const engine = $("searchEngine").value;
+  const browser = detectedBrowserLabel;
+
+  // Start history saving before navigating; keepalive helps it complete.
+  try {
+    fetch(HISTORY_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: q,
+        browser,
+        searchEngine: engineNames[engine] || engine
+      }),
+      keepalive: true
+    }).catch(err => {
+      console.warn("Could not save search history:", err);
+    });
+  } catch (err) {
+    console.warn("Could not save search history:", err);
+  }
+
+  openSearch(engine, q);
 });
+
 render();
 </script>
 </body>
